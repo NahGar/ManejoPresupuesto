@@ -84,7 +84,7 @@
                                 <div class="container">
                                     <div class="row">
                                         <div class="col">
-                                            <strong class="nombreCuenta">@cuenta.Nombre</strong>
+                                            <strong><a asp-action="Detalle" asp-route-id="@cuenta.Id">@cuenta.Nombre</a></strong>
                                         </div>
                                         <div class="col-2">
                                             <a asp-action="Editar" asp-route-id="@cuenta.Id" class="btn btn-primary">
