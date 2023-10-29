@@ -11,6 +11,7 @@ namespace ManejoPresupuesto.Servicios {
         Task Crear(Transaccion transaccion);
         Task<IEnumerable<Transaccion>> ObtenerPorCuentaId(ObtenerTransaccionesPorCuenta modelo);
         Task<Transaccion> ObtenerPorId(int id, int usuarioId);
+        Task<IEnumerable<ResultadoObtenerPorMes>> ObtenerPorMes(int usuarioId, int año);
         Task<IEnumerable<ResultadoObtenerPorSemana>> ObtenerPorSemana(ParametroObtenerTransaccionesPorUsuario modelo);
         Task<IEnumerable<Transaccion>> ObtenerPorUsuarioId(ParametroObtenerTransaccionesPorUsuario modelo);
     }
@@ -60,7 +61,7 @@ namespace ManejoPresupuesto.Servicios {
             using var connection = new SqlConnection(connectionString);
             return await connection.QueryAsync<Transaccion>(
                 @"SELECT t.Id, t.Monto, t.FechaTransaccion, c.Nombre as Categoria, 
-                cu.Nombre as Cuenta, c.TipoOperacionId
+                cu.Nombre as Cuenta, c.TipoOperacionId, t.Nota
                 FROM Transacciones t 
                 INNER JOIN Categorias c ON c.Id = t.CategoriaId
                 INNER JOIN Cuentas cu ON cu.Id = t.CuentaId
@@ -110,6 +111,20 @@ namespace ManejoPresupuesto.Servicios {
                 FechaTransaccion BETWEEN @fechaInicio and @fechaFin
                 GROUP BY datediff(d, @fechaInicio, FechaTransaccion) / 7, cat.TipoOperacionId",
                 modelo);
+        }
+
+        public async Task<IEnumerable<ResultadoObtenerPorMes>> ObtenerPorMes( int usuarioId, int año) {
+
+            using var connection = new SqlConnection(connectionString);
+            return await connection.QueryAsync<ResultadoObtenerPorMes>(
+                @"SELECT MONTH(FechaTransaccion) as Mes,
+                SUM(Monto) as Monto, cat.TipoOperacionId
+                FROM Transacciones 
+                INNER JOIN Categorias cat ON cat.Id = Transacciones.CategoriaId 
+                WHERE Transacciones.UsuarioId = @usuarioId AND
+                YEAR(FechaTransaccion) = @año 
+                GROUP BY MONTH(FechaTransaccion), cat.TipoOperacionId",
+                new { usuarioId, año });
         }
 
         public async Task Borrar( int id) {
