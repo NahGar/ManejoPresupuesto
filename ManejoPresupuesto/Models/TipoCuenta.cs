@@ -13,7 +13,8 @@ namespace ManejoPresupuesto.Models {
         //Con Display se puede establecer el texto del label que esté asociado con asp-for 
         //[Display(Name = "Nombre")]
         [PrimeraLetraMayuscula]
-        [Remote(action: "VerificarExisteTipoCuenta", controller:"TiposCuentas")]
+        //AdditionalFields es para que VerificarExisteTipoCuenta reciba el Id (se pueden enviar más campos separados por comas)
+        [Remote(action: "VerificarExisteTipoCuenta", controller:"TiposCuentas", AdditionalFields = "Id")]
         public string Nombre { get; set; }
 
         public int UsuarioId { get; set; }

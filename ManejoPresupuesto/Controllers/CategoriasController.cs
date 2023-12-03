@@ -1,6 +1,7 @@
 ﻿using ManejoPresupuesto.Models;
 using ManejoPresupuesto.Servicios;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace ManejoPresupuesto.Controllers {
     public class CategoriasController : Controller {
@@ -13,11 +14,22 @@ namespace ManejoPresupuesto.Controllers {
             this.servicioUsuarios = servicioUsuarios;
         }
 
-        public async Task<IActionResult> Index() {
+        public async Task<IActionResult> Index(PaginacionViewModel paginacionViewModel) {
 
             var usuarioId = servicioUsuarios.ObtenerUsuarioId();
-            var categorias = await repositorioCategorias.Obtener(usuarioId);
-            return View(categorias);
+            var categorias = await repositorioCategorias.Obtener(usuarioId, paginacionViewModel);
+            var totalCategorias = await repositorioCategorias.Contar( usuarioId );
+
+            var respuestaVM = new PaginacionRespuesta<Categoria> {
+                Elementos = categorias,
+                pagina = paginacionViewModel.pagina,
+                registrosPorPagina = paginacionViewModel.registrosPorPagina,
+                cantidadTotalRegistros = totalCategorias,
+                //BaseURL = "/categorias"
+                BaseURL = Url.Action()
+            };
+
+            return View(respuestaVM);
         }
 
         [HttpGet]

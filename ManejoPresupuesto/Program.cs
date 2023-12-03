@@ -1,21 +1,29 @@
 using ManejoPresupuesto.Models;
 using ManejoPresupuesto.Servicios;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+
+var politicaUsuariosAutenticados = new AuthorizationPolicyBuilder()
+    .RequireAuthenticatedUser().Build();
+
+builder.Services.AddControllersWithViews( opciones => {
+    opciones.Filters.Add(new AuthorizeFilter(politicaUsuariosAutenticados));
+});
 builder.Services.AddTransient<IRepositorioTiposCuentas, RepositorioTiposCuentas>();
 builder.Services.AddTransient<IServicioUsuarios, ServicioUsuarios>();
 builder.Services.AddTransient<IRepositorioCuentas, RepositorioCuentas>();
 builder.Services.AddTransient<IRepositorioCategorias, RepositorioCategorias>();
 builder.Services.AddTransient<IRepositorioTransacciones, RepositorioTransacciones>();
-builder.Services.AddTransient<IRepositorioUsuarios, RepositorioUsuarios>();
-builder.Services.AddTransient<IUserStore<Usuario>, UsuarioStore>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IServicioReportes, ServicioReportes>();
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddTransient<IRepositorioUsuarios, RepositorioUsuarios>();
+builder.Services.AddTransient<IUserStore<Usuario>, UsuarioStore>();
 builder.Services.AddTransient<SignInManager<Usuario>>();
 builder.Services.AddIdentityCore<Usuario>( opciones => {
     opciones.Password.RequireDigit = false;
@@ -25,11 +33,13 @@ builder.Services.AddIdentityCore<Usuario>( opciones => {
 }).AddErrorDescriber<MensajesDeErrorIdentity>(); //mensajes en español
 
 //configura cookies para la autenticación
-builder.Services.AddAuthentication(options => {
-    options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultSignOutScheme = IdentityConstants.ApplicationScheme;
-}).AddCookie(IdentityConstants.ApplicationScheme);
+builder.Services.AddAuthentication( opciones => {
+    opciones.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+    opciones.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+    opciones.DefaultSignOutScheme = IdentityConstants.ApplicationScheme;
+}).AddCookie(IdentityConstants.ApplicationScheme, opciones => {
+    opciones.LoginPath = "/usuarios/login";
+});
 
 var app = builder.Build();
 
